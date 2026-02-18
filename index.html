@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Dell × Respaid — Performance Report</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23151823'/%3E%3Cpath d='M10 7h7.5c3 0 5.5 2.2 5.5 5.2 0 2.2-1.4 4-3.4 4.8l4.4 8h-4.5l-3.8-7H14v7h-4V7zm4 7.5h3.5c1.2 0 2.2-.9 2.2-2.1 0-1.2-1-2.2-2.2-2.1H14v4.2z' fill='white'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --border: rgba(255,255,255,0.06);
+  --text: #ffffff;
+  --text-dim: rgba(255,255,255,0.5);
+  --text-muted: rgba(255,255,255,0.3);
+  --accent: #00C9A7;
+  --accent-glow: rgba(0,201,167,0.15);
+  --blue: #4f8fff;
+  --purple: #a855f7;
+  --orange: #f59e0b;
+}
+
+html { scroll-behavior: smooth; scroll-snap-type: y proximity; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+/* ====== PASSWORD GATE ====== */
+.gate {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+.gate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.gate-box { text-align: center; }
+.gate-logo {
+  width: 48px; height: 48px; margin: 0 auto 32px;
+  background: var(--surface); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+}
+.gate-logo svg { width: 28px; height: 28px; }
+.gate-title { font-size: 14px; font-weight: 500; color: var(--text-dim); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 24px; }
+.gate-input {
+  width: 280px; padding: 14px 20px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  color: var(--text); font-size: 16px; font-family: inherit;
+  text-align: center; outline: none;
+  transition: border-color 0.2s;
+}
+.gate-input:focus { border-color: var(--accent); }
+.gate-input.error { border-color: #ef4444; animation: shake 0.4s; }
+@keyframes shake { 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+
+/* ====== NAVIGATION ====== */
+.nav {
+  position: fixed; right: 24px; top: 50%; transform: translateY(-50%);
+  z-index: 100; display: flex; flex-direction: column; gap: 12px;
+}
+.nav-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); cursor: pointer;
+  transition: all 0.3s;
+}
+.nav-dot:hover { background: rgba(255,255,255,0.4); }
+.nav-dot.active { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); transform: scale(1.3); }
+
+/* ====== SECTIONS ====== */
+section {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 80px 60px; position: relative; scroll-snap-align: start;
+}
+.section-inner { max-width: 1100px; width: 100%; text-align: center; }
+
+/* ====== TYPOGRAPHY ====== */
+.mega { font-size: clamp(72px, 10vw, 140px); font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+.big { font-size: clamp(48px, 6vw, 80px); font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+.medium { font-size: clamp(28px, 3.5vw, 44px); font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+.label { font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+.sublabel { font-size: 18px; font-weight: 400; color: var(--text-dim); line-height: 1.6; max-width: 600px; margin: 0 auto; }
+.color-accent { color: var(--accent); }
+.color-blue { color: var(--blue); }
+.color-purple { color: var(--purple); }
+.color-orange { color: var(--orange); }
+
+/* ====== REVEAL ANIMATION ====== */
+.reveal {
+  opacity: 0; transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.15s; }
+.reveal-delay-2 { transition-delay: 0.3s; }
+.reveal-delay-3 { transition-delay: 0.45s; }
+
+/* ====== COUNTER ANIMATION ====== */
+.counter { display: inline-block; }
+
+/* ====== HERO ====== */
+.hero { position: relative; overflow: hidden; }
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, var(--accent-glow), transparent 70%);
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 100px;
+  background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2);
+  font-size: 13px; font-weight: 600; color: var(--accent);
+  margin-bottom: 40px;
+}
+.hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse-dot 2s infinite; }
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ====== TRAJECTORY ====== */
+.trajectory { background: var(--surface); }
+.traj-steps {
+  display: flex; align-items: center; justify-content: center; gap: 0;
+  margin-top: 48px;
+}
+.traj-step { text-align: center; flex: 0 0 auto; }
+.traj-step-num { font-size: clamp(36px, 5vw, 64px); font-weight: 800; color: var(--text-muted); transition: color 0.3s; }
+.traj-step:last-child .traj-step-num { color: var(--accent); font-size: clamp(48px, 7vw, 88px); }
+.traj-step-label { font-size: 13px; color: var(--text-muted); margin-top: 8px; font-weight: 500; }
+.traj-step:last-child .traj-step-label { color: var(--accent); }
+.traj-arrow {
+  font-size: 28px; color: var(--text-muted); margin: 0 clamp(16px, 3vw, 48px);
+  opacity: 0.3; position: relative; top: -10px;
+}
+.traj-badge {
+  display: inline-block; margin-top: 32px;
+  padding: 6px 14px; border-radius: 100px;
+  background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.2);
+  font-size: 14px; font-weight: 700; color: var(--accent);
+}
+
+/* ====== STATS ROW ====== */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 2px; margin-top: 64px;
+}
+.stat-card {
+  background: var(--surface); padding: 48px 32px; border-radius: 0;
+  text-align: center; position: relative;
+}
+.stat-card:first-child { border-radius: 16px 0 0 16px; }
+.stat-card:last-child { border-radius: 0 16px 16px 0; }
+.stat-card::after {
+  content: ''; position: absolute; right: 0; top: 20%; height: 60%;
+  width: 1px; background: var(--border);
+}
+.stat-card:last-child::after { display: none; }
+.stat-value { font-size: clamp(32px, 4vw, 52px); font-weight: 800; }
+.stat-label { font-size: 14px; color: var(--text-dim); margin-top: 8px; font-weight: 500; }
+
+/* ====== BUILD VS BUY ====== */
+.bvb-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 24px; margin-top: 56px; text-align: left;
+}
+.bvb-card {
+  padding: 48px 40px; border-radius: 20px;
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.bvb-card.build {
+  background: linear-gradient(180deg, rgba(239,68,68,0.04), var(--surface));
+  border-color: rgba(239,68,68,0.15);
+}
+.bvb-card.buy {
+  background: linear-gradient(180deg, rgba(0,201,167,0.06), var(--surface));
+  border-color: rgba(0,201,167,0.25);
+}
+.bvb-tag {
+  display: inline-block; padding: 4px 12px; border-radius: 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.bvb-card.build .bvb-tag { background: rgba(239,68,68,0.1); color: #ef4444; }
+.bvb-card.buy .bvb-tag { background: rgba(0,201,167,0.1); color: var(--accent); }
+.bvb-title { font-size: 28px; font-weight: 700; margin-bottom: 16px; }
+.bvb-card.build .bvb-title { color: rgba(255,255,255,0.6); }
+.bvb-list { list-style: none; padding: 0; }
+.bvb-list li {
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+  font-size: 15px; color: var(--text-dim); display: flex; align-items: center; gap: 12px;
+}
+.bvb-list li:last-child { border-bottom: none; }
+.bvb-icon { font-size: 16px; flex-shrink: 0; }
+.bvb-highlight {
+  margin-top: 24px; padding: 20px 24px; border-radius: 12px;
+  font-size: 15px; font-weight: 600;
+}
+.bvb-card.build .bvb-highlight { background: rgba(239,68,68,0.06); color: rgba(255,255,255,0.5); }
+.bvb-card.buy .bvb-highlight { background: rgba(0,201,167,0.08); color: var(--accent); }
+
+/* ====== WORK PERFORMED ====== */
+.work-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px; margin-top: 56px; text-align: center;
+}
+.work-card {
+  padding: 40px 24px; border-radius: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+}
+.work-num { font-size: 40px; font-weight: 800; margin-bottom: 8px; }
+.work-label { font-size: 14px; color: var(--text-dim); font-weight: 500; }
+.work-detail { font-size: 12px; color: var(--text-muted); margin-top: 12px; }
+
+/* ====== INSIGHT ====== */
+.insight-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 56px 48px; margin-top: 56px;
+  text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;
+}
+.insight-eyebrow { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
+.insight-title { font-size: 24px; font-weight: 700; margin-bottom: 16px; line-height: 1.4; }
+.insight-text { font-size: 16px; color: var(--text-dim); line-height: 1.8; }
+.insight-stat { display: inline; font-weight: 700; color: var(--accent); }
+
+/* ====== CTA ====== */
+.cta-section { background: linear-gradient(180deg, var(--bg), var(--surface)); }
+.cta-line { font-size: 18px; color: var(--text-dim); margin-top: 24px; line-height: 1.6; }
+.cta-link {
+  display: inline-block; margin-top: 40px;
+  padding: 16px 40px; border-radius: 12px;
+  background: var(--accent); color: #000; font-weight: 700; font-size: 16px;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-link:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,201,167,0.3); }
+
+/* ====== FOOTER ====== */
+.footer {
+  text-align: center; padding: 40px 60px;
+  font-size: 13px; color: var(--text-muted);
+}
+.footer a { color: var(--text-dim); text-decoration: none; }
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 768px) {
+  section { padding: 60px 24px; }
+  .nav { right: 12px; }
+  .stats-row { grid-template-columns: 1fr; gap: 1px; }
+  .stat-card { border-radius: 0 !important; }
+  .stat-card:first-child { border-radius: 16px 16px 0 0 !important; }
+  .stat-card:last-child { border-radius: 0 0 16px 16px !important; }
+  .stat-card::after { right: 20%; top: auto; bottom: 0; width: 60%; height: 1px; }
+  .bvb-grid { grid-template-columns: 1fr; }
+  .work-grid { grid-template-columns: 1fr; }
+  .traj-steps { flex-wrap: wrap; gap: 8px; }
+  .traj-arrow { margin: 0 12px; }
+  .insight-card { padding: 32px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">
+      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#151823"/><path d="M10 7h7.5c3 0 5.5 2.2 5.5 5.2 0 2.2-1.4 4-3.4 4.8l4.4 8h-4.5l-3.8-7H14v7h-4V7zm4 7.5h3.5c1.2 0 2.2-.9 2.2-2.1 0-1.2-1-2.2-2.2-2.1H14v4.2z" fill="white"/></svg>
+    </div>
+    <div class="gate-title">Dell × Respaid</div>
+    <input class="gate-input" id="gate-input" type="password" placeholder="Enter access code" autofocus>
+  </div>
+</div>
+
+<!-- NAVIGATION DOTS -->
+<nav class="nav" id="nav">
+  <div class="nav-dot active" data-section="0"></div>
+  <div class="nav-dot" data-section="1"></div>
+  <div class="nav-dot" data-section="2"></div>
+  <div class="nav-dot" data-section="3"></div>
+  <div class="nav-dot" data-section="4"></div>
+  <div class="nav-dot" data-section="5"></div>
+  <div class="nav-dot" data-section="6"></div>
+</nav>
+
+<!-- 1. HERO — The headline number -->
+<section class="hero" id="s0">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="hero-badge"><span class="hero-badge-dot"></span> Live data — updated daily</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="mega color-accent">$310K</div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="medium" style="margin-top: 16px; color: var(--text-dim); font-weight: 400;">recovered across 3 batches</div>
+    </div>
+    <div class="reveal reveal-delay-3">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value color-accent">145</div>
+          <div class="stat-label">Accounts recovered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">$219K</div>
+          <div class="stat-label">Net to Dell</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">$2.12M</div>
+          <div class="stat-label">Total placed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. TRAJECTORY — The improvement story -->
+<section class="trajectory" id="s1">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="label" style="margin-bottom: 16px;">Recovery rate by batch</div>
+      <div class="sublabel">Each batch, the AI learns from the previous results.<br>The improvement is compounding.</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="traj-steps">
+        <div class="traj-step">
+          <div class="traj-step-num">14.3%</div>
+          <div class="traj-step-label">Batch 1</div>
+        </div>
+        <div class="traj-arrow">→</div>
+        <div class="traj-step">
+          <div class="traj-step-num">16.5%</div>
+          <div class="traj-step-label">Batch 2</div>
+        </div>
+        <div class="traj-arrow">→</div>
+        <div class="traj-step">
+          <div class="traj-step-num">26.7%</div>
+          <div class="traj-step-label">Batch 3</div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="traj-badge">+87% improvement from Batch 1 to Batch 3</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. THE DOLLAR GROWTH -->
+<section id="s2">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="label" style="margin-bottom: 24px;">Dollar recovery growth</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="big">$43K <span style="color: var(--text-muted); font-weight: 400;">→</span> $240K</div>
+      <div class="sublabel" style="margin-top: 16px;">Batch 1 to Batch 3 — <span class="color-accent" style="font-weight: 700;">5.5× growth</span></div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 48px; margin-top: 64px;">
+        <div style="text-align: center;">
+          <div style="font-size: 48px; font-weight: 800; color: var(--accent);">21.5%</div>
+          <div style="font-size: 14px; color: var(--text-dim); margin-top: 8px;">Dollar recovery rate (B3)</div>
+        </div>
+        <div style="width: 1px; height: 60px; background: var(--border);"></div>
+        <div style="text-align: center;">
+          <div style="font-size: 48px; font-weight: 800;">73.3%</div>
+          <div style="font-size: 14px; color: var(--text-dim); margin-top: 8px;">Net retention to Dell</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. THE MACHINE — Work performed -->
+<section style="background: var(--surface);" id="s3">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="label" style="margin-bottom: 24px;">The machine behind the results</div>
+      <div class="mega color-blue">4,900+</div>
+      <div class="sublabel" style="margin-top: 12px;">Automated touchpoints across all 3 batches</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="work-grid">
+        <div class="work-card">
+          <div class="work-num color-blue">3,800+</div>
+          <div class="work-label">Personalized emails</div>
+          <div class="work-detail">64% open rate · 0 spam reports</div>
+        </div>
+        <div class="work-card">
+          <div class="work-num color-purple">800+</div>
+          <div class="work-label">AI phone calls</div>
+          <div class="work-detail">17.2% success rate · IVR navigation</div>
+        </div>
+        <div class="work-card">
+          <div class="work-num color-orange">305</div>
+          <div class="work-label">New contacts found by AI</div>
+          <div class="work-detail">$955K in additional coverage</div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal reveal-delay-2" style="margin-top: 48px;">
+      <div style="display: flex; justify-content: center; gap: 64px;">
+        <div style="text-align: center;">
+          <div style="font-size: 32px; font-weight: 800; color: var(--purple);">1,010h</div>
+          <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Manual work replaced</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 32px; font-weight: 800; color: var(--accent);">~$30K</div>
+          <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Labor cost avoided</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 32px; font-weight: 800;">63/70</div>
+          <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Disputes resolved (37 by AI)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. INSIGHT — The lever -->
+<section id="s4">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="label" style="margin-bottom: 24px;">What the data tells us</div>
+      <div class="big" style="max-width: 800px; margin: 0 auto;">One pattern explains most of the gap.</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="insight-card">
+        <div class="insight-eyebrow">Key finding</div>
+        <div class="insight-title">When debtors receive the actual invoice PDF, 36% pay.<br>When they don't, 0% pay.</div>
+        <div class="insight-text">
+          53 debtors asked for their invoice to process payment internally. Of those, <span class="insight-stat">23 received a PDF</span> from Dell's team — and many paid. The other <span class="insight-stat">30 were directed to a self-service portal</span>. None of them followed through.
+          <br><br>
+          AP departments need a PDF to process — a portal link is not actionable. These 30 accounts represent <span class="insight-stat">$50.8K in recoverable revenue</span> from engaged, willing-to-pay debtors.
+          <br><br>
+          No integration required — a simple shared folder or drag-and-drop is enough.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. BUILD VS BUY -->
+<section style="background: var(--surface);" id="s5">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="label" style="margin-bottom: 24px;">The technology advantage</div>
+      <div class="medium" style="max-width: 700px; margin: 0 auto; margin-bottom: 8px;">5 AI systems. Production-ready.<br>All learning from every interaction.</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="bvb-grid">
+        <div class="bvb-card build">
+          <div class="bvb-tag">Build in-house</div>
+          <div class="bvb-title">18–24 months</div>
+          <ul class="bvb-list">
+            <li><span class="bvb-icon">⚙️</span> ML engineers + telephony stack</li>
+            <li><span class="bvb-icon">⚖️</span> Compliance layer from scratch</li>
+            <li><span class="bvb-icon">🗄️</span> Training data collection</li>
+            <li><span class="bvb-icon">🔌</span> 5 systems to integrate & maintain</li>
+            <li><span class="bvb-icon">💰</span> $500K–$1M+ annual cost</li>
+          </ul>
+          <div class="bvb-highlight">Email · Voice · Disputes · Enrichment · Scoring — each built from zero</div>
+        </div>
+        <div class="bvb-card buy">
+          <div class="bvb-tag">White-label with Respaid</div>
+          <div class="bvb-title" style="color: var(--accent);">2 weeks</div>
+          <ul class="bvb-list">
+            <li><span class="bvb-icon">✅</span> All 5 AI systems production-ready</li>
+            <li><span class="bvb-icon">✅</span> Compliance built-in (FDCPA, CFPB)</li>
+            <li><span class="bvb-icon">✅</span> Trained on 650+ real Dell accounts</li>
+            <li><span class="bvb-icon">✅</span> Zero integration — we handle everything</li>
+            <li><span class="bvb-icon">✅</span> Performance-based pricing</li>
+          </ul>
+          <div class="bvb-highlight">Heavy lifting is on our side. Your team manages by exception.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. CTA -->
+<section class="cta-section" id="s6">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="label" style="margin-bottom: 24px;">Trajectory</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="big">30–35%</div>
+      <div class="sublabel" style="margin-top: 12px;">Projected recovery on the next portfolio —<br>with invoice PDFs and continued AI learning</div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="cta-line">The AI gets smarter with every batch. The three levers above<br>represent simple, high-impact improvements — none requiring new technology.</div>
+    </div>
+    <div class="reveal reveal-delay-3">
+      <a href="mailto:jb@respaid.com" class="cta-link">Let's discuss next steps</a>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  <a href="https://respaid.com">Respaid</a> — AI-powered receivables recovery · Y Combinator S23
+</div>
+
+<script>
+// Password gate
+if (sessionStorage.getItem('dell_auth_v3')) {
+  document.getElementById('gate').classList.add('hidden');
+}
+const gi = document.getElementById('gate-input');
+function tryAccess() {
+  if (['natalie','respaid'].includes(gi.value.trim().toLowerCase())) {
+    sessionStorage.setItem('dell_auth_v3', '1');
+    document.getElementById('gate').classList.add('hidden');
+  } else {
+    gi.classList.add('error');
+    setTimeout(() => gi.classList.remove('error'), 400);
+  }
+}
+gi.addEventListener('keydown', e => { if (e.key === 'Enter') tryAccess(); });
+
+// Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Nav dots
+const sections = document.querySelectorAll('section');
+const dots = document.querySelectorAll('.nav-dot');
+const navObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = [...sections].indexOf(e.target);
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+  });
+}, { threshold: 0.5 });
+sections.forEach(s => navObserver.observe(s));
+dots.forEach(d => d.addEventListener('click', () => {
+  sections[+d.dataset.section].scrollIntoView({ behavior: 'smooth' });
+}));
+</script>
+</body>
+</html>
